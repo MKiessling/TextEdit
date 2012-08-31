@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
@@ -8,14 +9,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.ContainerAdapter;
 import java.awt.event.ContainerEvent;
 import java.awt.event.InputEvent;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.LinkedList;
-import java.util.Timer;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -23,21 +19,19 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 
 import functions.FileOpenSave;
-import functions.Task;
-import javax.swing.JProgressBar;
-import java.awt.Component;
-import javax.swing.UIManager;
+import functions.OpenThread;
+import functions.SaveThread;
 
 @SuppressWarnings("serial")
 public class TextEdit extends JFrame {
@@ -88,13 +82,11 @@ public class TextEdit extends JFrame {
 		tabbedPane.setBorder(null);
 		contentPane.add(tabbedPane, BorderLayout.CENTER);
 		contentPane.add(statusPanel, BorderLayout.SOUTH);
-		timer = new Timer();
 		statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		statusPanel.add(statusLabel);
 		progressBar.setBorderPainted(false);
 		progressBar.setBorder(null);
 		statusPanel.add(progressBar);
-		fos = new FileOpenSave(this);
 
 		// *************************************
 		// add components to menu
@@ -208,68 +200,21 @@ public class TextEdit extends JFrame {
 	// action-performed methods
 	// *************************************
 	private void mntmSaveActionPerformed() {
-		new Thread() {
-			@Override
-			public void run() {
-				File[] files = fos.saveFile();
-				String ending = "";
-				if (files[0].getName().substring(
-						files[0].getName().length() - 3,
-						files[0].getName().length()) != "txt") {
-					ending = ".txt";
-				}
-				try {
-					statusLabel.setText("Status: saving...");
-					SwingUtilities.invokeLater(new Runnable() {
-
-						@Override
-						public void run() {
-							progressBar.setIndeterminate(true);
-						}
-					});
-					tabList.get(tabbedPane.getSelectedIndex()).write(
-							new FileWriter(new File(files[0].getAbsolutePath()
-									+ ending)));
-					tabbedPane.setSaved(1);
-					tabbedPane.setTitleAt(tabbedPane.getSelectedIndex(),
-							files[0].getName());
-					statusLabel.setText("Status: " + files[0].getName()
-							+ " saved");
-				} catch (IOException e) {
-					JOptionPane.showMessageDialog(tabbedPane,
-							"Could not save file");
-					statusLabel.setText("Status: Could not save file");
-				} catch (Exception e) {
-					JOptionPane.showMessageDialog(tabbedPane,
-							"Could not save file");
-					statusLabel.setText("Status: Could not save file");
-				}
-			}
-		}.start();
-		timer.schedule(new Task(statusLabel), 8000);
+		new SaveThread(statusLabel, tabbedPane, new FileOpenSave(this).saveFile(), tabList);
 	}
 
 	private void mntmOpenActionPerformed() {
-		File[] files = fos.openFile(filterTXT, true);
-		BufferedReader br;
-		try {
-			for (int i = 0; i < files.length; i++) {
-				br = new BufferedReader(new FileReader(files[i]));
-				String tmp = "";
-				JTextArea jta = new JTextArea();
-				while ((tmp = br.readLine()) != null) {
-					jta.append(tmp + "\n");
-				}
-				tabbedPane.addTab(files[i].getName(), new JScrollPane(jta));
-				tabbedPane.setSelectedIndex(tabbedPane.getTabCount() - 1);
-				tabList.add(tabbedPane.getSelectedIndex(), jta);
-			}
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(this, "Could not open file");
-		} catch (Exception e) {
-			JOptionPane.showMessageDialog(this, "Could not open file");
-		}
+		new OpenThread(statusLabel, tabbedPane, new FileOpenSave(this).openFile(filterTXT, true),
+				tabList);
 	}
+
+	// SwingUtilities.invokeLater(new Runnable() {
+	//
+	// @Override
+	// public void run() {
+	// progressBar.setIndeterminate(true);
+	// }
+	// });
 
 	private void mntmNewActionPeformed() {
 		JTextArea jta = new JTextArea();
@@ -310,9 +255,7 @@ public class TextEdit extends JFrame {
 	};
 
 	// other
-	private FileOpenSave fos;
 	private int x = 0;
-	private Timer timer;
 	private LinkedList<JTextArea> tabList = new LinkedList<JTextArea>();
 	private final JPanel statusPanel = new JPanel();
 	private final JLabel statusLabel = new JLabel("Status: ready");
