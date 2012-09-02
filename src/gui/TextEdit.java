@@ -84,9 +84,6 @@ public class TextEdit extends JFrame {
 		contentPane.add(statusPanel, BorderLayout.SOUTH);
 		statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 		statusPanel.add(statusLabel);
-		progressBar.setBorderPainted(false);
-		progressBar.setBorder(null);
-		statusPanel.add(progressBar);
 
 		// *************************************
 		// add components to menu
@@ -259,5 +256,4 @@ public class TextEdit extends JFrame {
 	private LinkedList<JTextArea> tabList = new LinkedList<JTextArea>();
 	private final JPanel statusPanel = new JPanel();
 	private final JLabel statusLabel = new JLabel("Status: ready");
-	private final JProgressBar progressBar = new JProgressBar();
 }
