@@ -19,6 +19,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -104,6 +105,10 @@ public class TextEdit extends JFrame {
 				TextEdit.class
 						.getResource("/com/sun/java/swing/plaf/windows/icons/FloppyDrive.gif")));
 		mntmSave.setEnabled(false);
+		// close tab
+		mnFile.add(mntmCloseTab);
+		mntmCloseTab.setVisible(false);
+		mntmCloseTab.setEnabled(false);
 		// exit
 		mnFile.add(mntmExit);
 		mntmExit.setIcon(new ImageIcon(TextEdit.class
@@ -126,6 +131,10 @@ public class TextEdit extends JFrame {
 		mntmSave.setMnemonic('S');
 		mntmSave.setAccelerator(KeyStroke.getKeyStroke('S',
 				InputEvent.CTRL_MASK));
+		// close tab
+		mntmCloseTab.setMnemonic('C');
+		mntmCloseTab.setAccelerator(KeyStroke.getKeyStroke('W',
+				InputEvent.CTRL_MASK));
 		// exit
 		mntmExit.setMnemonic('x');
 
@@ -143,7 +152,7 @@ public class TextEdit extends JFrame {
 		tabbedPane.addContainerListener(new ContainerAdapter() {
 			@Override
 			public void componentAdded(ContainerEvent e) {
-				enableSave();
+				enableFct();
 			}
 
 			@Override
@@ -153,7 +162,7 @@ public class TextEdit extends JFrame {
 				} else {
 					tabList.remove(tabbedPane.getSelectedIndex());
 				}
-				disableSave();
+				disableFct();
 			}
 
 		});
@@ -175,20 +184,30 @@ public class TextEdit extends JFrame {
 				mntmSaveActionPerformed();
 			}
 		});
+
+		mntmCloseTab.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				mntmCloseTabActionPerformed();
+			}
+		});
 	}
 
 	// *************************************
 	// menu functions
 	// *************************************
-	private void disableSave() {
+	private void disableFct() {
 		if (tabbedPane.getTabCount() == 0) {
 			mntmSave.setEnabled(false);
+			mntmCloseTab.setVisible(false);
+			mntmCloseTab.setEnabled(false);
 		}
 	}
 
-	private void enableSave() {
+	private void enableFct() {
 		if (!mntmSave.isEnabled()) {
 			mntmSave.setEnabled(true);
+			mntmCloseTab.setVisible(true);
+			mntmCloseTab.setEnabled(true);
 		}
 	}
 
@@ -196,21 +215,31 @@ public class TextEdit extends JFrame {
 	// action-performed methods
 	// *************************************
 	private void mntmSaveActionPerformed() {
-		new SaveThread(statusLabel, tabbedPane, new FileOpenSave(this).saveFile(), tabList);
+		new SaveThread(statusLabel, tabbedPane,
+				new FileOpenSave(this).saveFile(), tabList);
 	}
 
 	private void mntmOpenActionPerformed() {
-		new OpenThread(statusLabel, tabbedPane, new FileOpenSave(this).openFile(filterTXT, true),
-				tabList);
+		new OpenThread(statusLabel, tabbedPane,
+				new FileOpenSave(this).openFile(filterTXT, true), tabList);
 	}
 
-	// SwingUtilities.invokeLater(new Runnable() {
-	//
-	// @Override
-	// public void run() {
-	// progressBar.setIndeterminate(true);
-	// }
-	// });
+	protected void mntmCloseTabActionPerformed() {
+		if (tabbedPane.saveList.get(tabbedPane.getSelectedIndex()) != 1) {
+			String[] choices = { "Yes", "No" };
+			int choice = JOptionPane.showOptionDialog(null,
+					"Close tab without saving?", "Close tab",
+					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
+					null, choices, choices[1]);
+			if (choice == JOptionPane.YES_OPTION) {
+				tabbedPane.saveList.remove(tabbedPane.getSelectedIndex());
+				tabbedPane.removeTabAt(tabbedPane.getSelectedIndex());
+			}
+		} else {
+			tabbedPane.saveList.remove(tabbedPane.getSelectedIndex());
+			tabbedPane.removeTabAt(tabbedPane.getSelectedIndex());
+		}
+	}
 
 	private void mntmNewActionPeformed() {
 		JTextArea jta = new JTextArea();
@@ -241,6 +270,7 @@ public class TextEdit extends JFrame {
 	private final JMenuItem mntmOpen = new JMenuItem("Open");
 	private final JMenuItem mntmSave = new JMenuItem("Save");
 	private final JMenuItem mntmExit = new JMenuItem("Exit");
+	private final JMenuItem mntmCloseTab = new JMenuItem("Close Tab");
 
 	// dialogs
 	private FilenameFilter filterTXT = new FilenameFilter() {

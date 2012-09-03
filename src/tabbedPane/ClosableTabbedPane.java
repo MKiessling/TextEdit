@@ -17,7 +17,7 @@ import javax.swing.*;
 @SuppressWarnings("serial")
 public class ClosableTabbedPane extends JTabbedPane {
 	private TabCloseUI closeUI = new TabCloseUI(this);
-	private LinkedList<Integer> saveList = new LinkedList<Integer>();
+	public LinkedList<Integer> saveList = new LinkedList<Integer>();
 	public void paint(Graphics g) {
 		super.paint(g);
 		closeUI.paint(g);
