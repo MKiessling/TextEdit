@@ -1,5 +1,6 @@
 package tabbedPane;
-
+// author Haykaz Baghdasaryan
+// edited Martin Kießling
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Component;
